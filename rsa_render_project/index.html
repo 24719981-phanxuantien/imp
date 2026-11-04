@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mã hóa RSA</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 54px 16px; min-height: 100vh;
+      background: #f1f3f6; color: #171717;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .container {
+      width: 100%; max-width: 800px; margin: 0 auto;
+      padding: 27px 30px 30px; background: #fff;
+      border: 1px solid #d2d8e0; border-radius: 11px;
+    }
+    header { text-align: center; margin-bottom: 27px; }
+    h1 { font-size: 32px; margin: 0 0 5px; font-weight: 750; }
+    .subtitle { font-size: 20px; font-style: italic; color: #555; margin-bottom: 8px; }
+    .description { font-size: 19px; line-height: 1.45; color: #333; }
+    label { display: block; font-size: 20px; font-weight: 700; margin: 18px 0 8px; }
+    textarea {
+      width: 100%; min-height: 122px; resize: vertical;
+      border: 1px solid #b9c3d0; border-radius: 5px;
+      padding: 12px; font: 16px Consolas, monospace; color: #222;
+      outline: none; background: #fff;
+    }
+    textarea:focus { border-color: #3975e8; box-shadow: 0 0 0 2px #3975e822; }
+    #key { min-height: 61px; }
+    .actions { display: flex; gap: 10px; margin-top: 17px; }
+    button {
+      border: 0; border-radius: 5px; background: #2864e8; color: white;
+      padding: 12px 23px; font-size: 16px; font-weight: 700; cursor: pointer;
+    }
+    button:hover { background: #174fc9; }
+    button:disabled { opacity: .65; cursor: wait; }
+    #result { min-height: 122px; background: #f1f3f6; }
+    .status { min-height: 20px; margin-top: 9px; color: #b42318; font-size: 14px; }
+    footer { text-align: center; color: #777; margin: 20px auto 0; font-size: 16px; }
+    @media (max-width: 600px) {
+      body { padding: 20px 10px; }
+      .container { padding: 22px 16px; }
+      h1 { font-size: 27px; }
+      .description { font-size: 16px; }
+      label { font-size: 18px; }
+      .actions button { flex: 1; padding: 12px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>MÃ HÓA RSA</h1>
+      <div class="subtitle">Rivest–Shamir–Adleman</div>
+      <div class="description">Hệ thống mã hóa và giải mã dữ liệu sử dụng thuật toán khóa công khai RSA</div>
+    </header>
+
+    <label for="content">Nội dung đầu vào</label>
+    <textarea id="content" placeholder="Nhập nội dung cần mã hóa hoặc giải mã"></textarea>
+
+    <label for="key">Khóa RSA (e,n khi mã hóa hoặc d,n khi giải mã)</label>
+    <textarea id="key" placeholder="Ví dụ: 17, 3233"></textarea>
+
+    <div class="actions">
+      <button id="encrypt" type="button">Mã hóa</button>
+      <button id="decrypt" type="button">Giải mã</button>
+    </div>
+
+    <label for="result">Kết quả xử lý</label>
+    <textarea id="result" readonly placeholder="Kết quả sẽ hiển thị tại đây"></textarea>
+    <div class="status" id="status" role="status"></div>
+  </main>
+  <footer>RSA | C Language Implementation | Information Security</footer>
+
+  <script>
+    const content = document.getElementById("content");
+    const key = document.getElementById("key");
+    const result = document.getElementById("result");
+    const statusBox = document.getElementById("status");
+    const buttons = [document.getElementById("encrypt"), document.getElementById("decrypt")];
+
+    async function run(operation) {
+      statusBox.textContent = "";
+      result.value = "";
+      buttons.forEach(button => button.disabled = true);
+      try {
+        const response = await fetch("/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ operation, content: content.value, key: key.value })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Có lỗi xảy ra.");
+        result.value = data.result;
+      } catch (error) {
+        statusBox.textContent = error.message;
+      } finally {
+        buttons.forEach(button => button.disabled = false);
+      }
+    }
+
+    document.getElementById("encrypt").addEventListener("click", () => run("encrypt"));
+    document.getElementById("decrypt").addEventListener("click", () => run("decrypt"));
+  </script>
+</body>
+</html>
